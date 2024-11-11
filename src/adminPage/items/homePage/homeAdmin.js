@@ -30,7 +30,7 @@ class HomeAdmin extends React.Component {
             <Fragment>
                 <div className='container-map'>
                     <Map
-                        googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`}
+                        googleMapURL={`https://maps.googleapis.com/maps/api/js?key=&callback=initMap`}
                         loadingElement={<div style={{ height: `100%` }} />}
                         containerElement={<div style={{ height: `92vh`, margin: `auto`, border: '0px solid black' }} />}
                         mapElement={<div style={{ height: `100%` }} />}

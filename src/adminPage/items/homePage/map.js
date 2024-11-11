@@ -1,6 +1,7 @@
 import React from 'react';
 import { withGoogleMap, withScriptjs, GoogleMap, Marker, DirectionsRenderer } from "react-google-maps";
 import InfoBox from 'react-google-maps/lib/components/addons/InfoBox';
+import H from '@here/maps-api-for-javascript';
 import {URL} from "../../../common";
 
 const options = { closeBoxURL: '', enableEventPropagation: true };
@@ -74,9 +75,9 @@ class Map extends React.Component {
                 else if (data[i].groupId === data[i - 1].groupId) {
                   // schedule
                   listPointSchedule[index2] = {
-                    origin: new window.google.maps.LatLng(data[i - 1].lat, data[i - 1].lng),
-                    destination: new window.google.maps.LatLng(data[i].lat, data[i].lng),
-                    travelMode: 'DRIVING'
+                    origin: new H.geo.Point(data[i - 1].lat, data[i - 1].lng),
+                    destination: new H.geo.Point(data[i].lat, data[i].lng),
+                    mode: 'fastest;car'
                   };
                   listColorDirection[index2] = data[i].groupId;
                   index2++;
@@ -177,6 +178,7 @@ class Map extends React.Component {
               )
             }
         </GoogleMap>
+
       </div>
     );
   }
@@ -184,4 +186,5 @@ class Map extends React.Component {
 }
 
 export default withScriptjs(withGoogleMap(Map));
+// export default Map;
 
