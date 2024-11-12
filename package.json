@@ -16,7 +16,7 @@
     "react-dom": "^18.2.0",
     "react-loading-skeleton": "^3.1.0",
     "react-router-dom": "^6.4.3",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^4.0.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -42,9 +42,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "webpack": "^5.96.1",
-    "webpack-cli": "^5.1.4"
   }
 }
