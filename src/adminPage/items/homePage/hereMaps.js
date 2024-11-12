@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import H from '@here/maps-api-for-javascript';
 import { API_KEY, URL } from '../../../common';
+import "../homePage/css/map.css";
 // import 
 
 const HereMapComponent = () => {
@@ -17,13 +18,15 @@ const HereMapComponent = () => {
     });
 
     useEffect(() => {
+        
         // Initialize the Here Maps platform and map
         const defaultLayers = platform.createDefaultLayers();
         const hMap = new H.Map(mapRef.current, defaultLayers.vector.normal.map, {
             center: { lat: 21.028511, lng: 105.804817 },
-            zoom: 10
+            zoom: 13
         });
 
+        
         const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(hMap));
         const ui = H.ui.UI.createDefault(hMap, defaultLayers);
 
@@ -41,17 +44,20 @@ const HereMapComponent = () => {
           //create request
           var request = listPointSchedule[i];
           const routeRequest = {
-                mode: 'fastest;car',
-                waypoint0: `geo!${request.start.lat},${request.start.lng}`,
-                waypoint1: `geo!${request.end.lat},${request.end.lng}`,
+                mode: 'fastest;car;traffic:disabled',
+                waypoint0: `geo!${request.origin.lat},${request.origin.lng}`,
+                waypoint1: `geo!${request.destination.lat},${request.destination.lng}`,
                 representation: 'display'
             };
     
-          var routingService = new platform.getRoutingService();
+          var routingService = platform.getRoutingService();
           //pass the request to the route method
           routingService.calculateRoute(routeRequest, (result) => {
             arrDirections[i] = result.response.route[0];
-            setDirections(arrDirections);
+            if (arrDirections.length === listPointSchedule.length) {
+                console.log(arrDirections); // Log directions to see the result
+                setDirections(arrDirections); // Update the state with all directions
+            }
           });
         }
     };
@@ -1010,7 +1016,7 @@ const HereMapComponent = () => {
             listPointSchedule[index2] = {
                 origin: new H.geo.Point(data[i - 1].lat, data[i - 1].lng),
                 destination: new H.geo.Point(data[i].lat, data[i].lng),
-                mode: 'fastest;car'
+                transportMode: 'car'
             };
             listColorDirection[index2] = data[i].groupId;
             index2++;
@@ -1038,7 +1044,7 @@ const HereMapComponent = () => {
         setMarkers(listPointMarker);
         setNoStart(listPointMarkerNoPointStart);
         setColorDirection(listColorDirection);
-        createDirection(platform, listPointSchedule);
+        createDirection(listPointSchedule);
     };
 
     // Function to fetch data in real-time
@@ -1065,6 +1071,36 @@ const HereMapComponent = () => {
 
         return () => clearInterval(interval);
     }, []);
+    // Assuming `map` is your HERE map instance, and `ui` is the map UI
+    function addInfoBubbleToMarker(position, marker) {
+
+        // HTML structure for the info bubble
+        const bubbleContent = `
+        <div style="background-color: green; color: white; border-radius: 1em; width: 100px; font-size: 12px; text-align: center;">
+            Expected: ${position.expectedTimeString}
+        </div>
+        `;
+
+        // Create the info bubble but don't add it to the map initially
+        let infoBubble = new H.ui.InfoBubble(marker.getGeometry(), {closeButton: false});
+        infoBubble.setContent(bubbleContent);
+        // infoBubble.addClass('H_ib_noclose');
+        let isVisible = false;
+
+        ui.addBubble(infoBubble);
+        infoBubble.close();
+
+        // Add click event to marker to toggle the info bubble
+        marker.addEventListener('tap', () => {
+            if (isVisible) {
+                infoBubble.close(); // Hide the bubble
+            } else {
+                infoBubble.open();
+            }
+            isVisible = !isVisible; // Toggle visibility state
+        });
+}
+
 
     // Render markers and directions whenever they update
     useEffect(() => {
@@ -1077,11 +1113,14 @@ const HereMapComponent = () => {
                     icon: new H.map.Icon('http://maps.google.com/mapfiles/kml/pal4/icon7.png')
                 });
                 map.addObject(marker);
+                addInfoBubbleToMarker(markerData, marker);
             });
 
-            // Add directions to the map
-            const platform = new H.service.Platform({ apikey: 'YOUR_HERE_API_KEY' });
-            const routingService = platform.getRoutingService();
+            noStartMarkers.forEach((markerData) => {
+                const marker = new H.map.Marker({ lat: markerData.lat, lng: markerData.lng });
+                map.addObject(marker);
+                addInfoBubbleToMarker(markerData, marker);
+            });
 
             directions.forEach((direction, index) => {
                 const routeLine = new H.map.Polyline(
@@ -1091,9 +1130,11 @@ const HereMapComponent = () => {
                 map.addObject(routeLine);
             });
         }
-    }, [map, ui, markers, directions]);
+    }, [map, ui, markers, directions, colors, noStartMarkers]);
 
-    return <div ref={mapRef} style={{ width: '100%', height: '500px' }} />;
+    return (
+    <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+    );
 };
 
 export default HereMapComponent;
