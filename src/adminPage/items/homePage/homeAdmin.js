@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import Map from './map';
+import HereMapComponent from './hereMaps';
 import '../../../css/homeAdmin.css';
 import '../../../css/upload.css';
 import {URL, API_KEY} from "../../../common";
@@ -26,15 +26,11 @@ class HomeAdmin extends React.Component {
     }
     
     render() {
+        console.log(API_KEY);
         return(
             <Fragment>
                 <div className='container-map'>
-                    <Map
-                        googleMapURL={`https://maps.googleapis.com/maps/api/js?key=&callback=initMap`}
-                        loadingElement={<div style={{ height: `100%` }} />}
-                        containerElement={<div style={{ height: `92vh`, margin: `auto`, border: '0px solid black' }} />}
-                        mapElement={<div style={{ height: `100%` }} />}
-                    />
+                    <HereMapComponent></HereMapComponent>
                 </div>
                 {/* <div className='up-excel shadow'>
                     <h3 className="mb-0">Ghép nhóm</h3>
