@@ -40,8 +40,7 @@ export default function UserMenu() {
 
   const auth = useAuth();
 
-  const isAdmin = auth?.user?.role == ROLES.ADMIN;
-  const isAuctioneer = auth?.user?.role == ROLES.AUCTIONEER;
+  const isAdmin = auth?.user?.role === ROLES.ADMIN.toString();
 
   function logOut() {
     auth.logout();
@@ -63,14 +62,9 @@ export default function UserMenu() {
           <DropdownMenuGroup>
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Link
-                  href={
-                    isAdmin ? "/admin" : isAuctioneer ? "/auctioneer" : "/me"
-                  }
-                  className="flex flex-row"
-                >
+                <Link href={isAdmin ? "/admin" : "/"} className="flex flex-row">
                   <User className="mr-2 h-4 w-4" />
-                  <span>Me</span>
+                  <span>Admin</span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

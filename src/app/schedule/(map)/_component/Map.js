@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import H from "@here/maps-api-for-javascript";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import H from "@here/maps-api-for-javascript/bin/mapsjs.bundle.harp.js";
 const HereMapComponent = (props) => {
   const colors = [
     "#FF0000",
@@ -17,7 +17,12 @@ const HereMapComponent = (props) => {
   const platform = useRef(null);
 
   const [ui, setUi] = useState(null);
+
+  // Init map props
   const [directions, setDirections] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState([]);
+  const [selectedNoStartMarker, setSelectedNoStartMarker] = useState([]);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
   var {
     markers,
     noStartMarkers,
@@ -34,10 +39,13 @@ const HereMapComponent = (props) => {
         apikey: apiKey,
       });
       // Initialize the Here Maps platform and map
+      const engineType = H.Map.EngineType["HARP"];
       const defaultLayers = platform.current.createDefaultLayers({
+        engineType,
         lg: "vie",
       });
       const hMap = new H.Map(mapRef.current, defaultLayers.vector.normal.map, {
+        engineType,
         center: { lat: 21.028511, lng: 105.804817 },
         zoom: 14,
         padding: { top: 50, right: 50, bottom: 50, left: 50 },
@@ -51,18 +59,25 @@ const HereMapComponent = (props) => {
       setUi(ui);
       // createDirection(props.schedule);
       map.current = hMap;
-      //   return () => {
-      //     hMap.dispose();
-      //   };
+
+      return () => {
+        if (map.current) {
+          map.current.dispose();
+          map.current = null;
+        }
+      };
     }
-  }, [apiKey]);
+  }, []);
+
+  // select group id
   useEffect(() => {
     if (groupId !== 0) {
-      markers = [markers[taxiGroup.get(groupId)]];
+      setSelectedMarker([markers[taxiGroup.get(groupId)]]);
       const indexSchedule = endScheduleGroup.get(groupId);
-      noStartMarkers = noStartMarkers.slice(indexSchedule[1], indexSchedule[3]);
-      schedule = schedule.slice(indexSchedule[0], indexSchedule[2]);
-      createDirection(schedule);
+      setSelectedNoStartMarker(
+        noStartMarkers.slice(indexSchedule[0], indexSchedule[1])
+      );
+      setSelectedSchedule(schedule.slice(indexSchedule[0], indexSchedule[1]));
     }
     console.log(groupId);
   }, [groupId]);
@@ -103,37 +118,40 @@ const HereMapComponent = (props) => {
       // Outline and the pattern
       var routeLine = new H.map.Group();
       routeLine.addObjects([routeBackground, routeArrows]);
-      map.addObject(routeLine);
+      map.current.addObject(routeLine);
     }
   };
 
-  const createDirection = (listPointSchedule) => {
-    const originPoint = listPointSchedule[0];
-    const destinationPoint = listPointSchedule[listPointSchedule.length - 1];
-    var waypoints = [];
-    for (let i = 1; i < listPointSchedule.length; i++) {
-      //create request
-      var request = listPointSchedule[i];
-      waypoints.push({ lat: request.origin[0], lng: request.origin[1] });
-    }
+  useEffect(() => {
+    if (selectedSchedule) {
+      const originPoint = selectedSchedule[0];
+      const destinationPoint = selectedSchedule[selectedSchedule.length - 1];
+      var waypoints = [];
+      for (let i = 1; i < selectedSchedule.length; i++) {
+        //create request
+        var request = selectedSchedule[i];
+        waypoints.push({ lat: request.origin[0], lng: request.origin[1] });
+      }
 
-    const routeRequest = {
-      origin: `${originPoint.origin[0]},${originPoint.origin[1]}`,
-      // The end point of the route:
-      destination: `${destinationPoint.destination[0]},${destinationPoint.destination[1]}`,
-      transportMode: "car",
-      return: "polyline",
-      departureTime: "any",
-      via: new H.service.Url.MultiValueQueryParameter(
-        waypoints.map((wp) => `${wp.lat},${wp.lng}`)
-      ),
-    };
-    var routingService = platform.getRoutingService(null, 8);
-    //pass the request to the route method
-    routingService.calculateRoute(routeRequest, onResult, function (error) {
-      alert(error.message);
-    });
-  };
+      const routeRequest = {
+        origin: `${originPoint.origin[0]},${originPoint.origin[1]}`,
+        // The end point of the route:
+        destination: `${destinationPoint.destination[0]},${destinationPoint.destination[1]}`,
+        transportMode: "car",
+        return: "polyline",
+        departureTime: "any",
+        via: new H.service.Url.MultiValueQueryParameter(
+          waypoints.map((wp) => `${wp.lat},${wp.lng}`)
+        ),
+      };
+      var routingService = platform.current.getRoutingService(null, 8);
+      //pass the request to the route method
+      routingService.calculateRoute(routeRequest, onResult, function (error) {
+        alert(error.message);
+      });
+    }
+  }, [selectedSchedule]);
+
   // Assuming `map` is your HERE map instance, and `ui` is the map UI
   function addInfoBubbleToMarker(position, marker) {
     // HTML structure for the info bubble
@@ -167,34 +185,35 @@ const HereMapComponent = (props) => {
 
   // Render markers and directions whenever they update
   useEffect(() => {
-    if (map && ui && groupId !== 0) {
-      map.removeObjects(map.getObjects());
+    const icon = new H.map.Icon(
+      "http://maps.google.com/mapfiles/kml/pal4/icon7.png"
+    );
+    if (map.current && ui && groupId !== 0) {
+      map.current.removeObjects(map.current.getObjects());
 
       // Add markers to the map
-      markers.forEach((markerData) => {
+      selectedMarker.forEach((markerData) => {
         const marker = new H.map.Marker(
           { lat: markerData.lat, lng: markerData.lng },
           {
-            icon: new H.map.Icon(
-              "http://maps.google.com/mapfiles/kml/pal4/icon7.png"
-            ),
+            icon: icon,
           }
         );
-        map.addObject(marker);
+        map.current.addObject(marker);
         addInfoBubbleToMarker(markerData, marker);
       });
 
-      noStartMarkers.forEach((markerData) => {
+      selectedNoStartMarker.forEach((markerData) => {
         const marker = new H.map.Marker({
           lat: markerData.lat,
           lng: markerData.lng,
         });
-        map.addObject(marker);
+        map.current.addObject(marker);
         addInfoBubbleToMarker(markerData, marker);
       });
       // map.getViewPort().resize();
     }
-  }, [map, ui, groupId]);
+  }, [map.current, ui, markers, groupId]);
 
   return <div ref={mapRef} style={{ width: "100%", height: "500px" }} />;
 };

@@ -10,125 +10,47 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import { getUserProfileByID, suspenUser } from "@/app/api/apiEndpoints";
-import { userData, auctionData } from "@/lib/constant/dataInterface";
-import { listAuctionManaging } from "@/app/api/apiEndpoints";
-import { DataTable } from "@/components/ui/data-table";
-import { columns_auctions } from "@/app/auctioneer/(auctionSesion)/_component/columns";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { HTTP_STATUS } from "@/lib/constant/constant";
-import { toast } from "sonner";
+import { taxiDetail } from "@/app/api/apiEndpoints";
+import { driverDto, taxiDto } from "@/lib/constant/dataInterface";
 
-export default function StaffDetail({ params, searchParams }: any) {
+export default function DriverDetail({ params }: any) {
   const id = params.id;
-  const [user, setUser] = useState<userData>();
-  const [pageCount, setPageCount] = useState(0);
-  const [listItem, setListItem] = useState<auctionData[]>([]);
+  const [taxi, setTaxi] = useState<driverDto>();
   const [isActive, setActive] = useState();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await listAuctionManaging({
-          auctioneer_id: user?._id,
-        });
-        setPageCount(response.data.totalPages);
-        setListItem(response.data.auctions);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-    fetchData();
-  }, [user?._id]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getUserProfileByID(id);
-        console.log(response.data.data);
-        setUser(response.data.data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-    fetchData();
-  }, [id]);
-
-  const handleSuspendUser = (active: any) => {
-    console.log(user?.active);
-    if (active === "true") {
-      console.log("okela");
-      suspenUser(user?._id as String, { active: true })
-        .then((res) => {
-          if (res.status == HTTP_STATUS.OK) {
-            toast.success("Bỏ đình chỉ người dùng thành công !");
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.error("Vui lòng thử lại.");
-        });
-    }
-    if (active === "false") {
-      console.log("okela111");
-      suspenUser(user?._id as String, { active: false })
-        .then((res) => {
-          if (res.status == HTTP_STATUS.OK) {
-            toast.success("Đình chỉ người dùng thành công !");
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.error("Vui lòng thử lại.");
-        });
-    }
-  };
+    taxiDetail(id).then((res) => {
+      setTaxi(res.data);
+    });
+  }, []);
 
   return (
     <div className="container">
       <Card className="">
         <CardHeader>
-          <CardTitle>Thông tin nhân viên</CardTitle>
+          <CardTitle>Thông tin Taxi</CardTitle>
         </CardHeader>
         <CardContent>
-          {user && (
+          {taxi && (
             <div className="grid w-full items-center gap-4">
               <div className="grid grid-cols-2 gap-4  ">
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="name">Họ và tên</Label>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input
-                    id="name"
-                    defaultValue={user?.name || ""}
+                    id="fullName"
+                    defaultValue={taxi?.fullName || ""}
                     disabled={true}
                     className="rounded-full"
                   />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="ssid">CCCD</Label>
+                  <Label htmlFor="nameCar">Car Name</Label>
                   <Input
-                    id="ssid"
-                    defaultValue={user?.ssid || ""}
+                    id="nameCar"
+                    defaultValue={taxi?.nameCar || ""}
                     disabled={true}
                     className="rounded-full"
                   />
@@ -137,10 +59,10 @@ export default function StaffDetail({ params, searchParams }: any) {
 
               <div className="grid grid-cols-2 gap-4  ">
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="phone">Số điện thoại</Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    defaultValue={user?.phone || ""}
+                    defaultValue={taxi?.phone || ""}
                     disabled={true}
                     className="rounded-full"
                   />
@@ -149,61 +71,42 @@ export default function StaffDetail({ params, searchParams }: any) {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    defaultValue={user?.email || ""}
+                    defaultValue={taxi?.email || ""}
                     disabled={true}
                     className="rounded-full"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4  ">
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="phone">Trạng thái</Label>
-                  {/* <Input id="phone" defaultValue={user?.active ? 'Hoạt động' : 'Đình chỉ'} className="rounded-full" /> */}
-                  <Select
-                    defaultValue={user?.active?.toString()}
-                    onValueChange={(e) => {
-                      handleSuspendUser(e);
-                    }}
-                  >
-                    <SelectTrigger className="w-full rounded-full">
-                      <SelectValue placeholder="" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="true">Hoạt động</SelectItem>
-                        <SelectItem value="false">Đình chỉ</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="licensePlate">License Plate</Label>
+                  <Input
+                    id="licensePlate"
+                    defaultValue={taxi?.licensePlate || ""}
+                    disabled={true}
+                    className="rounded-full"
+                  />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="email">Xác minh</Label>
+                  <Label htmlFor="seat">Seat</Label>
                   <Input
-                    id="email"
-                    defaultValue={
-                      user?.verified ? "Đã xác minh" : "Chưa xác minh"
-                    }
-                    disabled
+                    id="seat"
+                    defaultValue={taxi?.seat || ""}
+                    disabled={true}
                     className="rounded-full"
                   />
                 </div>
               </div>
+
+              {/* <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="phone">Status</Label>
+                  <Input id="phone" defaultValue={user?.active ? 'Hoạt động' : 'Đình chỉ'} className="rounded-full" />
+                </div>
+              </div> */}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card className="mt-5">
-        <CardHeader>
-          <CardTitle>Phiên đấu giá phụ trách</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns_auctions}
-            data={listItem}
-            pageCount={pageCount}
-          />
         </CardContent>
       </Card>
     </div>

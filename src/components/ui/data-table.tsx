@@ -20,11 +20,13 @@ import React from "react";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  onRowClick?: (row: TData) => void; // Add onRowClick prop
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onRowClick, // Destructure onRowClick prop
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -33,7 +35,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border bg-card overflow-auto">
+    <div className="rounded-md border bg-card overflow-y-auto max-h-80">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -59,6 +61,7 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                onClick={() => onRowClick && onRowClick(row.original)} // Handle row click
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>

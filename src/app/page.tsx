@@ -28,11 +28,10 @@ export default function HomePage() {
               Chào mừng bạn đến với{" "}
             </h3>
             <h1 className="font-extrabold mb-3 text-6xl animate-typing overflow-hidden whitespace-nowrap leading-normal">
-              Vua tiền tệ
+              T-Share
             </h1>
             <h1 className="font-normal mb-3 text-slate-500 dark:text-slate-400">
-              Tự hào là một trong những nền tảng đấu giá trực tuyến hàng đầu tại
-              Việt Nam.
+              Dịch vụ chia sẻ taxi đầu tiên của Việt Nam
             </h1>
             <Button className="mt-2" onClick={executeScroll}>
               Khám phá
@@ -62,13 +61,13 @@ export default function HomePage() {
             <div>
               <div className="relative">
                 <Image
-                  src={"/hero.png"}
+                  src={"/taxi.png"}
                   alt="Logo"
-                  width={350}
-                  height={350}
+                  width={700}
+                  height={700}
                   className="z-20"
                 />
-                <div className="absolute top-0 right-20 animate-bid">
+                <div className="absolute top-20 right-20 animate-bid">
                   <Image
                     src={"/bid.png"}
                     alt="Logo"
@@ -92,21 +91,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* === Item show === */}
-      <div className="bg-[url(/home1-bg2.png)] dark:bg-[url(/Shape.png)] bg-cover">
-        <div
-          className="flex justify-center items-center flex-col pb-10 container"
-          ref={assetSectionRef}
-        >
-          <div className="my-6">
-            <h3 className="font-bold text-2xl text-primary">
-              Các cuộc đấu giá
-            </h3>
-          </div>
-          <MyCarousel />
         </div>
       </div>
 

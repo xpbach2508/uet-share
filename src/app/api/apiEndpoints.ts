@@ -1,4 +1,5 @@
 import {
+  createTaxiDto,
   filterUserData,
   userData,
   userLoginData,
@@ -49,4 +50,26 @@ export function getAllOnlineGroup() {
 //schedule
 export function listScheduleAdminProphet() {
   return request.get("/schedule/admin-prophet");
+}
+
+//taxi
+export function getListActiveTaxi() {
+  return request.get("/taxi/taxi_active");
+}
+
+export function createTaxi(data: createTaxiDto) {
+  return request.post("/taxi/create", data);
+}
+
+export function taxiDetail(driver_id: String) {
+  return request.get("driver/find_by_id", { params: { driverId: driver_id } });
+}
+
+export function getListTaxiEmpty() {
+  return request.get("/taxi/taxi_empty");
+}
+
+//driver
+export function createDriver(data: any) {
+  return request.post("/auth/signup_driver", data);
 }

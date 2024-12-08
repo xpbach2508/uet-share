@@ -54,3 +54,34 @@ export type scheduleDataDto = {
   expectedTimeString: string;
   wait: number;
 };
+
+export type driverDto = {
+  id: number;
+  email: string;
+  fullName: string;
+  phone: string;
+  password: string;
+  licensePlate: string;
+  seat: number;
+  nameCar: string;
+  carId: number;
+};
+
+export type createTaxiDto = {
+  licensePlate: string;
+  seat: number;
+  nameCar: string;
+};
+
+export type taxiDto = {
+  licensePlate: string;
+  seat: number;
+  nameCar: string;
+};
+
+export type taxiEmptyDto = {
+  id: number;
+  licensePlate: string;
+  seat: number;
+  nameCar: string;
+};

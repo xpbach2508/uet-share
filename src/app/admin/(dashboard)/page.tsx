@@ -3,15 +3,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import dynamic from "next/dynamic";
 import Overview from "../_component/Overview";
-const StaffStatistic = dynamic(() => import("../_component/AuctionStatistic"), {
-  ssr: false,
-});
-const UserStatistic = dynamic(() => import("../_component/AssetStatistic"), {
-  ssr: false,
-});
-const PostStatistic = dynamic(() => import("../_component/PostStatistic"), {
-  ssr: false,
-});
 import { getAllUser } from "@/app/api/apiEndpoints";
 import { useEffect, useMemo, useState } from "react";
 import { userData } from "@/lib/constant/dataInterface";
