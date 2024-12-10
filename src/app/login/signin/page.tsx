@@ -64,13 +64,10 @@ export default function LoginForm() {
   async function onSubmit(values: formData) {
     setAuthData(values);
     setLoading("Loading");
-    console.log(values);
     try {
-      console.log("?");
       await loginUser(values).then((res: any) => {
         if (res.status == HTTP_STATUS.OK) {
           setLoading("Thành công");
-          console.log(res);
           if (res.data.jwt) {
             handleLogin(res.data);
           }

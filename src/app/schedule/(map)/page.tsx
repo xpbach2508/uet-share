@@ -1,29 +1,16 @@
 "use client";
-import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { listScheduleAdminProphet } from "@/app/api/apiEndpoints";
 import { DataTable } from "@/components/ui/data-table";
 import { columns_schedules } from "./_component/columns";
-import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import * as React from "react";
-import { CalendarIcon } from "@radix-ui/react-icons";
-import { addDays, format } from "date-fns";
-import { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import { useSearchParams } from "next/navigation";
-import { useDebounce } from "@/lib/hook/useDebounce";
 import { scheduleDataDto } from "@/lib/constant/dataInterface";
-import { Label } from "@/components/ui/label";
 import { Marker, NoStartMarker, Schedule } from "./_component/dataInterface";
 import dynamic from "next/dynamic";
+import { socket } from "@/app/socket";
 
 //map init
 const HereMap = dynamic(() => import("./_component/Map"), {
@@ -41,11 +28,15 @@ export default function Page() {
   const [taxiGroup, setTaxiGroup] = useState(new Map());
   const [endScheduleGroup, setEndScheduleGroup] = useState(new Map());
   const [isTableVisible, setIsTableVisible] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const HERE_API_KEY = process.env.NEXT_PUBLIC_HERE_API_KEY;
+
+  const [messages, setMessage] = useState<string[]>([]);
+
+  const [time, setTime] = useState(7.0); // initial time
 
   const processData = (responseData: scheduleDataDto[]) => {
     let data = responseData;
-    console.log(data);
     let listPointMarker = [],
       index = 0;
     let listPointSchedule = [],
@@ -69,7 +60,6 @@ export default function Page() {
         };
         tempTaxiGroup.set(data[i].groupId, index);
         tempEndStartGroup.set(data[i].groupId, index2);
-        // console.log(endScheduleGroup);
         index++;
       } else if (data[i].groupId === data[i - 1].groupId) {
         // schedule
@@ -77,6 +67,7 @@ export default function Page() {
           origin: [data[i - 1].lat, data[i - 1].lng] as [number, number],
           destination: [data[i].lat, data[i].lng] as [number, number],
           transportMode: "car",
+          expectedTime: [data[i - 1].expectedTime, data[i].expectedTime],
         };
 
         // markersFullNoStart
@@ -137,9 +128,60 @@ export default function Page() {
     const result = fetchData().catch(console.error);
   }, [refresh]);
 
+  //socket
+  let onConnect = () => {
+    console.log("connected:" + socket.id);
+  };
+  let onDisconnect = () => {
+    console.log("disconnected");
+  };
+
+  let onMessageEvent = (data: string) => {
+    setMessage([...messages, data]);
+  };
+  socket.on("connect", onConnect);
+  socket.on("disconnect", onDisconnect);
+  socket.on("schedule", onMessageEvent);
+  useEffect(() => {
+    socket.connect();
+  }, []);
+
   const handleRowClick = (row: any) => {
     setSelectedGroupId(row.groupId);
+    socket.emit("choose_group", {
+      chatMessage: selectedGroupId,
+      id: socket.id,
+      timestamp: Date.now(),
+    });
   };
+
+  const handleStartTime = () => {
+    setIsRunning(!isRunning);
+    if (!isRunning) {
+      setTime(7.0);
+    }
+    socket.emit("start_time", {
+      chatMessage: time,
+      id: socket.id,
+      timestamp: Date.now(),
+    });
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setTime((prevTime) => prevTime + 0.1);
+      }, 1000);
+    } else if (interval) {
+      clearInterval(interval);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isRunning]);
 
   return (
     <div className="container">
@@ -157,6 +199,14 @@ export default function Page() {
           >
             List Group
           </Button>
+          <Button
+            onClick={() => handleStartTime()}
+            className={
+              isRunning ? "bg-red-500 text-white" : "bg-green-500 text-white"
+            }
+          >
+            {isRunning ? time.toFixed(2) : "Start"}
+          </Button>
         </div>
       </div>
       <div>
@@ -168,6 +218,8 @@ export default function Page() {
           groupId={selectedGroupId}
           taxiGroup={taxiGroup}
           apiKey={HERE_API_KEY}
+          isRunning={isRunning}
+          currentTime={time}
         ></HereMap>
       </div>
       <div className="w-full h-1/4 overflow-auto">

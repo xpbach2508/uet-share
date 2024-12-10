@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import H from "@here/maps-api-for-javascript/bin/mapsjs.bundle.harp.js";
 const HereMapComponent = (props) => {
   const colors = [
@@ -20,6 +20,7 @@ const HereMapComponent = (props) => {
 
   // Init map props
   const [directions, setDirections] = useState([]);
+  const [multiLineResult, setMultiLine] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState([]);
   const [selectedNoStartMarker, setSelectedNoStartMarker] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -31,7 +32,12 @@ const HereMapComponent = (props) => {
     groupId,
     taxiGroup,
     apiKey,
+    isRunning,
+    currentTime,
   } = props;
+  const iconTaxi = new H.map.Icon(
+    "http://maps.google.com/mapfiles/kml/pal4/icon7.png"
+  );
 
   useEffect(() => {
     if (!map.current) {
@@ -71,6 +77,7 @@ const HereMapComponent = (props) => {
 
   // select group id
   useEffect(() => {
+    console;
     if (groupId !== 0) {
       setSelectedMarker([markers[taxiGroup.get(groupId)]]);
       const indexSchedule = endScheduleGroup.get(groupId);
@@ -81,6 +88,52 @@ const HereMapComponent = (props) => {
     }
     console.log(groupId);
   }, [groupId]);
+
+  const animateMarker = (currentTime) => {
+    console.log(selectedSchedule);
+    const destinationPoint = selectedSchedule[selectedSchedule.length - 1];
+    if (currentTime < destinationPoint.expectedTime[1]) {
+      selectedSchedule.forEach((schedule) => {
+        if (currentTime >= schedule.expectedTime[1]) {
+          const marker = new H.map.Marker(
+            {
+              lat: schedule.destination[0],
+              lng: schedule.destination[1],
+            },
+            { icon: iconTaxi }
+          );
+          map.current.addObject(marker);
+        }
+      });
+    } else {
+      const marker = new H.map.Marker(
+        {
+          lat: selectedSchedule[selectedSchedule.length - 1].destination[0],
+          lng: selectedSchedule[selectedSchedule.length - 1].destination[1],
+        },
+        { icon: iconTaxi }
+      );
+      map.current.addObject(marker);
+    }
+  };
+
+  useEffect(() => {
+    if (isRunning) {
+      const marker = new H.map.Marker(
+        {
+          lat: selectedSchedule[1].origin[0],
+          lng: selectedSchedule[1].origin[1],
+        },
+        { icon: iconTaxi }
+      );
+      map.current.addObject(marker);
+    }
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (isRunning) animateMarker(currentTime);
+  }, [currentTime]);
+
   const onResult = function (result) {
     // Ensure that at least one route was found
     if (result.routes.length) {
@@ -94,6 +147,7 @@ const HereMapComponent = (props) => {
 
       // Create an instance of H.geo.MultiLineString
       const multiLineString = new H.geo.MultiLineString(lineStrings);
+      setMultiLine(multiLineString);
 
       const routeBackground = new H.map.Polyline(multiLineString, {
         style: {
@@ -185,9 +239,6 @@ const HereMapComponent = (props) => {
 
   // Render markers and directions whenever they update
   useEffect(() => {
-    const icon = new H.map.Icon(
-      "http://maps.google.com/mapfiles/kml/pal4/icon7.png"
-    );
     if (map.current && ui && groupId !== 0) {
       map.current.removeObjects(map.current.getObjects());
 
@@ -196,7 +247,7 @@ const HereMapComponent = (props) => {
         const marker = new H.map.Marker(
           { lat: markerData.lat, lng: markerData.lng },
           {
-            icon: icon,
+            icon: iconTaxi,
           }
         );
         map.current.addObject(marker);
@@ -213,7 +264,7 @@ const HereMapComponent = (props) => {
       });
       // map.getViewPort().resize();
     }
-  }, [map.current, ui, markers, groupId]);
+  }, [map.current, ui, groupId, selectedNoStartMarker, selectedMarker]);
 
   return <div ref={mapRef} style={{ width: "100%", height: "500px" }} />;
 };
