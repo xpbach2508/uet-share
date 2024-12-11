@@ -1,6 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import { listScheduleAdminProphet } from "@/app/api/apiEndpoints";
+import { useCallback, useEffect, useState } from "react";
+import {
+  listScheduleAdminProphet,
+  listScheduleDriverProphet,
+} from "@/app/api/apiEndpoints";
 import { DataTable } from "@/components/ui/data-table";
 import { columns_schedules } from "./_component/columns";
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@ export default function Page() {
   const [refresh, setReFresh] = useState(false);
 
   //map entity
+  const [tableData, setTableData] = useState<Marker[]>([]);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [noStartMarkers, setNoStart] = useState<NoStartMarker[]>([]);
   const [colorDirection, setColorDirection] = useState<number[]>([]);
@@ -27,11 +31,10 @@ export default function Page() {
   const [selectedGroupId, setSelectedGroupId] = useState<number>(0);
   const [taxiGroup, setTaxiGroup] = useState(new Map());
   const [endScheduleGroup, setEndScheduleGroup] = useState(new Map());
-  const [isTableVisible, setIsTableVisible] = useState(false);
+  const [isTableVisible, setIsTableVisible] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
+  const [reload, setReload] = useState(false);
   const HERE_API_KEY = process.env.NEXT_PUBLIC_HERE_API_KEY;
-
-  const [messages, setMessage] = useState<string[]>([]);
 
   const [time, setTime] = useState(7.0); // initial time
 
@@ -117,33 +120,51 @@ export default function Page() {
     setEndScheduleGroup(tempEndStartGroup);
     setTaxiGroup(tempTaxiGroup);
   };
-
+  const fetchDataAdmin = async () => {
+    const data = await listScheduleAdminProphet();
+    const data_use = await data?.data;
+    processData(data_use);
+  };
   useEffect(() => {
     setSelectedGroupId(0);
-    const fetchData = async () => {
-      const data = await listScheduleAdminProphet();
-      const data_use = await data?.data;
-      processData(data_use);
-    };
-    const result = fetchData().catch(console.error);
+    const result = fetchDataAdmin().catch(console.error);
+    setTableData(markers);
   }, [refresh]);
-
-  //socket
-  let onConnect = () => {
-    console.log("connected:" + socket.id);
-  };
-  let onDisconnect = () => {
-    console.log("disconnected");
-  };
-
-  let onMessageEvent = (data: string) => {
-    setMessage([...messages, data]);
-  };
-  socket.on("connect", onConnect);
-  socket.on("disconnect", onDisconnect);
-  socket.on("schedule", onMessageEvent);
   useEffect(() => {
+    const onConnect = () => {
+      console.log("connected:" + socket.id);
+    };
+
+    const onDisconnect = () => {
+      console.log("disconnected");
+    };
+
+    const onInsertionEvent = async (data: number) => {
+      console.log("Received schedule event with data:", data);
+      await fetchDataAdmin();
+      setReload(!reload);
+      const fetchOneGroup = async () => {
+        const dataOneGroup = await listScheduleDriverProphet(data);
+        const data_use = dataOneGroup?.data;
+        setTableData(data_use);
+      };
+      const result = fetchOneGroup().catch(console.error);
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("schedule", onInsertionEvent);
+
+    // Connect the socket
     socket.connect();
+
+    // Cleanup function to remove event listeners
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("schedule", onInsertionEvent);
+      socket.off("testsocket");
+    };
   }, []);
 
   const handleRowClick = (row: any) => {
@@ -197,7 +218,7 @@ export default function Page() {
             onClick={() => setIsTableVisible(!isTableVisible)}
             className="bg-blue-500 text-white"
           >
-            List Group
+            Toggle List Group
           </Button>
           <Button
             onClick={() => handleStartTime()}
@@ -208,6 +229,7 @@ export default function Page() {
             {isRunning ? time.toFixed(2) : "Start"}
           </Button>
         </div>
+        <div>{selectedGroupId}</div>
       </div>
       <div>
         <HereMap
@@ -220,14 +242,15 @@ export default function Page() {
           apiKey={HERE_API_KEY}
           isRunning={isRunning}
           currentTime={time}
+          reload={reload}
         ></HereMap>
       </div>
       <div className="w-full h-1/4 overflow-auto">
         {isTableVisible && (
-          <div className="overflow-auto w-full h-full">
+          <div className="overflow-auto w-h-80 h-full">
             <DataTable
               columns={columns_schedules}
-              data={markers}
+              data={tableData}
               onRowClick={handleRowClick}
             />
           </div>

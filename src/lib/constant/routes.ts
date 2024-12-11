@@ -26,11 +26,11 @@ export const adminRoutes = [
     label: "Taxi",
     href: "/admin/taxi",
   },
-  {
-    icon: FileCode2Icon,
-    label: "Tài xế",
-    href: "/admin/driver",
-  },
+  // {
+  //   icon: FileCode2Icon,
+  //   label: "Tài xế",
+  //   href: "/admin/driver",
+  // },
 ];
 
 export const guestRoutes = [

@@ -47,10 +47,10 @@ export const columns_schedules: ColumnDef<any>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
+  // {
+  //   accessorKey: "id",
+  //   header: "ID",
+  // },
   {
     accessorKey: "groupId",
     header: "Group ID",

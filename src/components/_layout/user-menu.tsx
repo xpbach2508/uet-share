@@ -62,7 +62,7 @@ export default function UserMenu() {
           <DropdownMenuGroup>
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Link href={isAdmin ? "/admin" : "/"} className="flex flex-row">
+                <Link href={"/admin"} className="flex flex-row">
                   <User className="mr-2 h-4 w-4" />
                   <span>Admin</span>
                 </Link>

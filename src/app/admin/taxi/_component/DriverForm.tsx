@@ -210,7 +210,7 @@ const DriverForm = ({ setClose, open }: { setClose: any; open: any }) => {
             )}
           />
           <DialogFooter>
-            <Button type="submit">Create taxi</Button>
+            <Button type="submit">Create driver</Button>
           </DialogFooter>
         </form>
       </Form>

@@ -52,6 +52,12 @@ export function listScheduleAdminProphet() {
   return request.get("/schedule/admin-prophet");
 }
 
+export function listScheduleDriverProphet(group_id: number) {
+  return request.get("/schedule/driver-prophet", {
+    params: { groupId: group_id },
+  });
+}
+
 //taxi
 export function getListActiveTaxi() {
   return request.get("/taxi/taxi_active");

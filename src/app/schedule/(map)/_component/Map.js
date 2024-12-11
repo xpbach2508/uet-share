@@ -34,6 +34,7 @@ const HereMapComponent = (props) => {
     apiKey,
     isRunning,
     currentTime,
+    reload,
   } = props;
   const iconTaxi = new H.map.Icon(
     "http://maps.google.com/mapfiles/kml/pal4/icon7.png"
@@ -77,7 +78,6 @@ const HereMapComponent = (props) => {
 
   // select group id
   useEffect(() => {
-    console;
     if (groupId !== 0) {
       setSelectedMarker([markers[taxiGroup.get(groupId)]]);
       const indexSchedule = endScheduleGroup.get(groupId);
@@ -86,8 +86,8 @@ const HereMapComponent = (props) => {
       );
       setSelectedSchedule(schedule.slice(indexSchedule[0], indexSchedule[1]));
     }
-    console.log(groupId);
-  }, [groupId]);
+    console.log("in map" + groupId);
+  }, [groupId, reload]);
 
   const animateMarker = (currentTime) => {
     console.log(selectedSchedule);

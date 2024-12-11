@@ -5,17 +5,9 @@ import Image from "next/image";
 import MyCarousel from "./component/carousel";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
+import Link from "next/link";
 
 export default function HomePage() {
-  const assetSectionRef = useRef<null | HTMLDivElement>(null);
-  const executeScroll = () => {
-    assetSectionRef.current!.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-    window.scrollBy(0, -70);
-  };
-
   return (
     <div>
       {/* === Banner === */}
@@ -33,9 +25,9 @@ export default function HomePage() {
             <h1 className="font-normal mb-3 text-slate-500 dark:text-slate-400">
               Dịch vụ chia sẻ taxi đầu tiên của Việt Nam
             </h1>
-            <Button className="mt-2" onClick={executeScroll}>
-              Khám phá
-            </Button>
+            <Link href={"/admin"}>
+              <Button className="mt-2">Khám phá</Button>
+            </Link>
             <div className="absolute left-72 -bottom-1 z-10">
               <div className=" animate-floating3">
                 <Image src="/shape3.png" width={29} height={29} alt="" />
