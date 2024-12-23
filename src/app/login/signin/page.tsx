@@ -88,7 +88,7 @@ export default function LoginForm() {
           href={"/"}
           className="flex items-center mb-6 text-2xl font-semibold text-white"
         >
-          T-Share
+          UET-Share
         </Link>
         {
           <div className="w-full bg-card rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0">
